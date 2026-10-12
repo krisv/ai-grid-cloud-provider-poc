@@ -1,0 +1,224 @@
+{
+  "repository": "https://github.com/opendatahub-io/odh-dashboard",
+  "commit": "8051fbbea117457b4da4074fb2856b732e6677a4",
+  "files": [
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/ViewSubscriptionPage.tsx",
+      "local": "src/app/pages/subscriptions/ViewSubscriptionPage.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/EditSubscriptionPage.tsx",
+      "local": "src/app/pages/subscriptions/EditSubscriptionPage.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/DeleteSubscriptionModal.tsx",
+      "local": "src/app/pages/subscriptions/DeleteSubscriptionModal.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/CreateSubscriptionPage.tsx",
+      "local": "src/app/pages/subscriptions/CreateSubscriptionPage.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/viewSubscription/utils.ts",
+      "local": "src/app/pages/subscriptions/viewSubscription/utils.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/viewSubscription/SubscriptionGroupsSection.tsx",
+      "local": "src/app/pages/subscriptions/viewSubscription/SubscriptionGroupsSection.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/viewSubscription/SubscriptionDetailsSection.tsx",
+      "local": "src/app/pages/subscriptions/viewSubscription/SubscriptionDetailsSection.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/createSubscription/RateLimitRow.tsx",
+      "local": "src/app/pages/subscriptions/createSubscription/RateLimitRow.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/createSubscription/EditRateLimitsModal.tsx",
+      "local": "src/app/pages/subscriptions/createSubscription/EditRateLimitsModal.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/createSubscription/CreateSubscriptionForm.tsx",
+      "local": "src/app/pages/subscriptions/createSubscription/CreateSubscriptionForm.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/allSubscriptions/const.ts",
+      "local": "src/app/pages/subscriptions/allSubscriptions/const.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/allSubscriptions/columns.ts",
+      "local": "src/app/pages/subscriptions/allSubscriptions/columns.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/allSubscriptions/SubscriptionsToolbar.tsx",
+      "local": "src/app/pages/subscriptions/allSubscriptions/SubscriptionsToolbar.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/allSubscriptions/SubscriptionsTable.tsx",
+      "local": "src/app/pages/subscriptions/allSubscriptions/SubscriptionsTable.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/subscriptions/allSubscriptions/SubscriptionTableRow.tsx",
+      "local": "src/app/pages/subscriptions/allSubscriptions/SubscriptionTableRow.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/Phase/PhaseModal.tsx",
+      "local": "src/app/shared/Phase/PhaseModal.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/Phase/PhaseLabel.tsx",
+      "local": "src/app/shared/Phase/PhaseLabel.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/Phase/PhaseApiDetails.tsx",
+      "local": "src/app/shared/Phase/PhaseApiDetails.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/Phase/AffectedModelsTable.tsx",
+      "local": "src/app/shared/Phase/AffectedModelsTable.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/types/subscriptions.ts",
+      "local": "src/app/types/subscriptions.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/types/maas-model.ts",
+      "local": "src/app/types/maas-model.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/types/event-tracking.ts",
+      "local": "src/app/types/event-tracking.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/utilities/rateLimits.ts",
+      "local": "src/app/utilities/rateLimits.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/utilities/phaseLabelUtils.tsx",
+      "local": "src/app/utilities/phaseLabelUtils.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/utilities/authpolicies.ts",
+      "local": "src/app/utilities/authpolicies.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/utilities/maasGovernanceNavigation.ts",
+      "local": "src/app/utilities/maasGovernanceNavigation.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/hooks/useSubscriptionModels.ts",
+      "local": "src/app/hooks/useSubscriptionModels.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/hooks/useGovernanceAffectedModels.ts",
+      "local": "src/app/hooks/useGovernanceAffectedModels.ts"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/maas-governance/SubscriptionsTab.tsx",
+      "local": "src/app/pages/maas-governance/SubscriptionsTab.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/pages/maas-governance/EmptyStatePage.tsx",
+      "local": "src/app/pages/maas-governance/EmptyStatePage.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/AddModelsModal.tsx",
+      "local": "src/app/shared/AddModelsModal.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/MaasModelsSection.tsx",
+      "local": "src/app/shared/MaasModelsSection.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/ExpandedGroupsPanel.tsx",
+      "local": "src/app/shared/ExpandedGroupsPanel.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/ExpandedModelsPanel.tsx",
+      "local": "src/app/shared/ExpandedModelsPanel.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/CompoundExpandCountCell.tsx",
+      "local": "src/app/shared/CompoundExpandCountCell.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/SystemAuthenticatedWarning.tsx",
+      "local": "src/app/shared/SystemAuthenticatedWarning.tsx"
+    },
+    {
+      "upstream": "packages/maas/frontend/src/app/shared/DeleteModal.tsx",
+      "local": "src/app/shared/DeleteModal.tsx"
+    },
+    {
+      "upstream": "packages/ui-core/src/components/MultiSelection.tsx",
+      "local": "src/shared/components/MultiSelection.tsx"
+    },
+    {
+      "upstream": "packages/ui-core/src/components/K8sNameDescriptionField/K8sNameDescriptionField.tsx",
+      "local": "src/shared/components/K8sNameDescriptionField/K8sNameDescriptionField.tsx"
+    },
+    {
+      "upstream": "packages/ui-core/src/components/K8sNameDescriptionField/ResourceNameField.tsx",
+      "local": "src/shared/components/K8sNameDescriptionField/ResourceNameField.tsx"
+    },
+    {
+      "upstream": "packages/ui-core/src/components/K8sNameDescriptionField/ResourceNameDefinitionTooltip.tsx",
+      "local": "src/shared/components/K8sNameDescriptionField/ResourceNameDefinitionTooltip.tsx"
+    },
+    {
+      "upstream": "packages/ui-core/src/components/K8sNameDescriptionField/HelperTextItemVariants.tsx",
+      "local": "src/shared/components/K8sNameDescriptionField/HelperTextItemVariants.tsx"
+    },
+    {
+      "upstream": "packages/ui-core/src/hooks/useZodFormValidation.ts",
+      "local": "src/shared/hooks/useZodFormValidation.ts"
+    },
+    {
+      "upstream": "packages/ui-core/src/utilities/useValidation.ts",
+      "local": "src/shared/utilities/useValidation.ts"
+    },
+    {
+      "upstream": "packages/k8s-core/src/k8sNameDescriptionFieldTypes.ts",
+      "local": "src/shared/utilities/nameField.ts"
+    },
+    {
+      "upstream": "packages/k8s-core/src/k8sNameDescriptionFieldUtils.ts",
+      "local": "src/shared/utilities/nameField.ts"
+    },
+    {
+      "upstream": "packages/k8s-core/src/k8sResourceUtils.ts",
+      "local": "src/shared/utilities/nameField.ts"
+    },
+    {
+      "upstream": "frontend/src/components/table/TableRowTitleDescription.tsx",
+      "local": "src/shared/components/TableRowTitleDescription.tsx"
+    },
+    {
+      "upstream": "packages/model-serving/src/components/global/GlobalDeploymentsView.tsx",
+      "local": "src/app/pages/models/ModelsPage.tsx"
+    },
+    {
+      "upstream": "packages/model-serving/src/components/deployments/DeploymentsTable.tsx",
+      "local": "src/app/pages/models/ModelsPage.tsx"
+    },
+    {
+      "upstream": "packages/model-serving/src/components/deploymentWizard/ModelDeploymentWizard.tsx",
+      "local": "src/app/pages/models/ModelWizard.tsx"
+    },
+    {
+      "upstream": "packages/model-serving/src/components/deploymentWizard/fields/RuntimeArgsField.tsx",
+      "local": "src/app/pages/models/fields/RuntimeArgsField.tsx"
+    }
+  ],
+  "controllerReference": {
+    "repository": "https://github.com/opendatahub-io/models-as-a-service",
+    "commit": "83391711e701f17ddb9b212aa81e591ec1758d15",
+    "files": [
+      "maas-controller/api/maas/v1alpha1/maassubscription_types.go",
+      "maas-controller/api/maas/v1alpha1/common_types.go",
+      "maas-controller/pkg/controller/maas/maassubscription_controller.go",
+      "maas-api/internal/subscription/selector.go"
+    ]
+  }
+}

@@ -1,0 +1,267 @@
+// Adapted from opendatahub-io/odh-dashboard
+// packages/maas/frontend/src/app/pages/subscriptions/allSubscriptions/SubscriptionTableRow.tsx
+// upstream commit: 8051fbbea117457b4da4074fb2856b732e6677a4
+import * as React from 'react';
+import { ResourceTr, ResourceNameTooltip } from '~/shared/dashboard';
+import TableRowTitleDescription from '~/shared/components/TableRowTitleDescription';
+import { ActionsColumn, ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
+import { Content, ContentVariants } from '@patternfly/react-core';
+import { Link, useNavigate } from 'react-router-dom';
+import { fireMiscTrackingEvent } from '~/shared/telemetry';
+import { MaaSSubscription } from '~/app/types/subscriptions';
+import {
+  getSubscriptionEditUrl,
+  getSubscriptionViewUrl,
+} from '~/app/utilities/maasGovernanceNavigation';
+import { useSubscriptionAffectedModels } from '~/app/hooks/useGovernanceAffectedModels';
+import PhaseLabel from '~/app/shared/Phase/PhaseLabel';
+import {
+  convertStringToPhaseStatus,
+  PhaseLabelLocation,
+  PhaseResourceType,
+} from '~/app/utilities/phaseLabelUtils';
+import ExpandedGroupsPanel from '~/app/shared/ExpandedGroupsPanel';
+import CompoundExpandCountCell from '~/app/shared/CompoundExpandCountCell';
+import ExpandedModelsPanel from '~/app/shared/ExpandedModelsPanel';
+import {
+  EventTrackingExpandedSection,
+  EventTrackingPopoverType,
+  EventTrackingResourceType,
+  EventTrackingSource,
+  convertStringToPopoverViewedStatus,
+  EventTrackingEditSource,
+  MaaSEvents,
+  MaaSSettingsDetailsViewedProperties,
+  MaaSSettingsListRowExpandedProperties,
+  MaaSGovernanceStatusPopoverViewedProperties,
+} from '~/app/types/event-tracking';
+import { subscriptionsColumns } from './columns';
+
+type ExpandedPanel = 'groups' | 'models' | null;
+
+type SubscriptionTableRowProps = {
+  subscription: MaaSSubscription;
+  rowIndex: number;
+  setDeleteSubscription: (subscription: MaaSSubscription) => void;
+  returnTo?: string;
+};
+
+const SubscriptionTableRow: React.FC<SubscriptionTableRowProps> = ({
+  subscription,
+  rowIndex,
+  setDeleteSubscription,
+  returnTo,
+}) => {
+  const navigate = useNavigate();
+  const navState = {
+    state: {
+      ...(returnTo ? { returnTo } : {}),
+      editSource: EventTrackingEditSource.LIST_KEBAB,
+    },
+  };
+  const [expandedPanel, setExpandedPanel] = React.useState<ExpandedPanel>(null);
+  const { affectedModels, overviewLoaded } = useSubscriptionAffectedModels(subscription);
+
+  const togglePanel = (panel: 'groups' | 'models') => {
+    setExpandedPanel((prev) => (prev === panel ? null : panel));
+  };
+
+  const onViewDetailsSubscription = (subscriptionName: string) => {
+    fireMiscTrackingEvent(MaaSEvents.MAAS_RESOURCE_DETAILS_VIEWED, {
+      resourceType: EventTrackingResourceType.SUBSCRIPTION,
+      source: EventTrackingSource.TAB_KEBAB,
+      resourceStatus: subscription.phase ?? '',
+    } satisfies MaaSSettingsDetailsViewedProperties);
+    navigate(getSubscriptionViewUrl(subscriptionName), navState);
+  };
+  const onEditSubscription = (subscriptionName: string) => {
+    navigate(getSubscriptionEditUrl(subscriptionName), navState);
+  };
+
+  const groupsCount = Array.isArray(subscription.owner.groups)
+    ? subscription.owner.groups.length
+    : 0;
+  const modelsCount = subscription.modelRefs.length;
+  const groups = Array.isArray(subscription.owner.groups) ? subscription.owner.groups : [];
+
+  const nameCell = (
+    <Td dataLabel={subscriptionsColumns[0].label}>
+      <TableRowTitleDescription
+        title={
+          subscription.deletionTimestamp ? (
+            <span data-testid="subscription-name">
+              {subscription.displayName ?? subscription.name}
+            </span>
+          ) : (
+            <ResourceNameTooltip name={subscription.name}>
+              <Link
+                to={getSubscriptionViewUrl(subscription.name)}
+                state={returnTo ? { returnTo } : undefined}
+                onClick={() =>
+                  fireMiscTrackingEvent(MaaSEvents.MAAS_RESOURCE_DETAILS_VIEWED, {
+                    resourceType: EventTrackingResourceType.SUBSCRIPTION,
+                    source: EventTrackingSource.TAB_LINK,
+                    resourceStatus: subscription.phase ?? '',
+                  } satisfies MaaSSettingsDetailsViewedProperties)
+                }
+              >
+                {subscription.displayName ?? subscription.name}
+              </Link>
+            </ResourceNameTooltip>
+          )
+        }
+        description={subscription.description ?? ''}
+        truncateDescriptionLines={2}
+      />
+    </Td>
+  );
+
+  const phaseCell = (
+    <Td dataLabel={subscriptionsColumns[1].label}>
+      <PhaseLabel
+        phase={subscription.phase}
+        statusMessage={subscription.statusMessage}
+        reason={subscription.reason}
+        status={subscription.status}
+        conditionType={subscription.conditionType}
+        lastTransitionTime={subscription.lastTransitionTime}
+        resourceType={PhaseResourceType.SUBSCRIPTION}
+        resourceName={subscription.displayName ?? subscription.name}
+        affectedModels={affectedModels}
+        overviewLoaded={overviewLoaded}
+        resourceUrl={getSubscriptionViewUrl(subscription.name)}
+        returnTo={returnTo}
+        onClick={() => {
+          fireMiscTrackingEvent(MaaSEvents.MAAS_GOVERNANCE_STATUS_POPOVER_VIEWED, {
+            popoverType: EventTrackingPopoverType.STATUS,
+            status: convertStringToPopoverViewedStatus(subscription.phase),
+            location: PhaseLabelLocation.SUBSCRIPTIONS_TAB,
+          } satisfies MaaSGovernanceStatusPopoverViewedProperties);
+        }}
+      />
+    </Td>
+  );
+
+  const priorityCell = (
+    <Td dataLabel={subscriptionsColumns[4].label}>
+      <Content
+        component={ContentVariants.p}
+        className="pf-v6-u-font-weight-bold pf-v6-u-text-align-center"
+      >
+        {subscription.priority ?? '-'}
+      </Content>
+    </Td>
+  );
+
+  const actionsCell = (
+    <Td isActionCell>
+      <ActionsColumn
+        data-testid="subscription-actions"
+        isDisabled={!!subscription.deletionTimestamp}
+        items={[
+          {
+            title: 'View details',
+            onClick: () => onViewDetailsSubscription(subscription.name),
+          },
+          {
+            title: 'Edit',
+            onClick: () => onEditSubscription(subscription.name),
+          },
+          { isSeparator: true },
+          {
+            title: 'Delete',
+            onClick: () => setDeleteSubscription(subscription),
+          },
+        ]}
+      />
+    </Td>
+  );
+
+  const isRowExpanded = expandedPanel !== null;
+
+  return (
+    <Tbody isExpanded={isRowExpanded}>
+      <ResourceTr
+        isDeleting={!!subscription.deletionTimestamp}
+        isContentExpanded={isRowExpanded}
+        isControlRow
+        data-testid="subscription-row"
+      >
+        {nameCell}
+        {phaseCell}
+        <Td
+          dataLabel={subscriptionsColumns[2].label}
+          compoundExpand={{
+            isExpanded: expandedPanel === 'groups',
+            onToggle: () => {
+              togglePanel('groups');
+              // So it doesn't fire on open and close of the expanded section
+              if (expandedPanel !== 'groups') {
+                fireMiscTrackingEvent(MaaSEvents.MAAS_SETTINGS_LIST_ROW_EXPANDED, {
+                  resourceType: EventTrackingResourceType.SUBSCRIPTION,
+                  expandedSection: EventTrackingExpandedSection.GROUPS,
+                  resourceStatus: convertStringToPhaseStatus(subscription.phase ?? ''),
+                  modelCount: modelsCount,
+                  groupCount: groupsCount,
+                } satisfies MaaSSettingsListRowExpandedProperties);
+              }
+            },
+            expandId: `expand-${subscription.name}-groups`,
+            rowIndex,
+            columnIndex: 2,
+          }}
+          data-testid="subscription-groups-expand-btn"
+        >
+          <CompoundExpandCountCell count={groupsCount} />
+        </Td>
+        <Td
+          dataLabel={subscriptionsColumns[3].label}
+          compoundExpand={{
+            isExpanded: expandedPanel === 'models',
+            onToggle: () => {
+              togglePanel('models');
+              // So it doesn't fire on open and close of the expanded section
+              if (expandedPanel !== 'models') {
+                fireMiscTrackingEvent(MaaSEvents.MAAS_SETTINGS_LIST_ROW_EXPANDED, {
+                  resourceType: EventTrackingResourceType.SUBSCRIPTION,
+                  expandedSection: EventTrackingExpandedSection.MODELS,
+                  resourceStatus: convertStringToPhaseStatus(subscription.phase ?? ''),
+                  modelCount: modelsCount,
+                  groupCount: groupsCount,
+                } satisfies MaaSSettingsListRowExpandedProperties);
+              }
+            },
+            expandId: `expand-${subscription.name}-models`,
+            rowIndex,
+            columnIndex: 3,
+          }}
+          data-testid="subscription-models-expand-btn"
+        >
+          <CompoundExpandCountCell count={modelsCount} />
+        </Td>
+        {priorityCell}
+        {actionsCell}
+      </ResourceTr>
+      <Tr isExpanded={expandedPanel === 'groups'}>
+        <Td colSpan={subscriptionsColumns.length + 1}>
+          <ExpandableRowContent>
+            <ExpandedGroupsPanel groups={groups} />
+          </ExpandableRowContent>
+        </Td>
+      </Tr>
+      <Tr isExpanded={expandedPanel === 'models'}>
+        <Td colSpan={subscriptionsColumns.length + 1}>
+          <ExpandableRowContent>
+            <ExpandedModelsPanel
+              models={subscription.modelRefs}
+              testIdResource="subscription"
+              showTokenLimits
+            />
+          </ExpandableRowContent>
+        </Td>
+      </Tr>
+    </Tbody>
+  );
+};
+
+export default SubscriptionTableRow;

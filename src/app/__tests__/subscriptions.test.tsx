@@ -1,0 +1,112 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import App from '../App';
+import { MockSubscriptionService } from '~/services/subscriptions/MockSubscriptionService';
+import { configureSubscriptionService } from '~/services/subscriptions/configuredService';
+import { subscriptions } from '~/services/subscriptions/fixtures';
+import { ServiceError } from '~/services/subscriptions/SubscriptionService';
+let service:MockSubscriptionService;
+beforeEach(()=>{service=new MockSubscriptionService();configureSubscriptionService(service);});
+const open=(route='/subscriptions')=>render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>);
+describe('administrator subscription flows',()=>{
+  it('renders the list, expands groups, filters and shows details',async()=>{
+    const user=userEvent.setup();open();
+    const table=await screen.findByTestId('subscriptions-table');
+    expect(within(table).getByRole('link',{name:'Engineering'})).toBeVisible();
+    const row=within(table).getByRole('link',{name:'Engineering'}).closest('tr')!;
+    await user.click(within(row).getByTestId('subscription-groups-expand-btn').querySelector('button')!);
+    expect(within(row.closest('tbody')!).getByTestId('expanded-group-name')).toHaveTextContent('engineering');
+    await user.type(screen.getByTestId('subscriptions-filter-input').querySelector('input')!,'production');
+    expect(within(table).queryByRole('link',{name:'Research'})).not.toBeInTheDocument();
+    await user.click(within(table).getByRole('link',{name:'Engineering'}));
+    expect(await screen.findByTestId('subscription-details-section')).toHaveTextContent('Engineering');
+    expect(screen.getByTestId('subscription-models-table')).toHaveTextContent('100,000 / 1 hour');
+  });
+  it('creates a subscription using the group and model selectors and token-limit modal',async()=>{
+    const user=userEvent.setup();open('/subscriptions/create');
+    const name=await screen.findByTestId('subscription-name-desc-name');
+    expect(screen.queryByTestId('subscription-create-auth-policy')).not.toBeInTheDocument();
+    expect(screen.getByTestId('create-subscription-button')).toBeDisabled();
+    await user.type(name,'Test team');
+    await user.type(screen.getByRole('combobox',{name:'Enter groups'}),'engineering');
+    const option=await screen.findByRole('option',{name:'Add group "engineering"'});
+    await user.click(option.querySelector('button') ?? option);
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByTestId('add-models-button'));
+    const modelsTable=screen.getByTestId('add-models-table');
+    expect(within(modelsTable).getByRole('columnheader',{name:/Model name/})).toBeVisible();
+    for(const heading of ['Project','Model ID','Subscriptions','Policies']) {
+      expect(within(modelsTable).queryByRole('columnheader',{name:heading})).not.toBeInTheDocument();
+    }
+    await user.click(screen.getByTestId('toggle-model-granite-3-8b'));
+    await user.click(screen.getByTestId('confirm-add-models'));
+    expect(screen.getByTestId('create-subscription-button')).toBeDisabled();
+    await user.click(screen.getByTestId('add-token-limit-0'));
+    await user.click(screen.getByTestId('save-rate-limits'));
+    await user.click(screen.getByTestId('create-subscription-button'));
+    await screen.findByTestId('subscriptions-table');
+    expect(await screen.findByRole('link',{name:'Test team'})).toBeVisible();
+    const info=await service.getInfo('test-team');
+    expect(info.subscription.modelRefs[0].tokenRateLimits).toEqual([{limit:1000,window:'1h'}]);
+    expect(info.authPolicies.some(p=>p.name==='test-team-policy')).toBe(true);
+    expect(info.subscription.phase).toBe('Saved');
+  });
+  it('edits without losing billing or metering configuration',async()=>{
+    const user=userEvent.setup();open('/subscriptions/edit/engineering');
+    const name=await screen.findByTestId('subscription-name-desc-name');
+    expect(screen.queryByTestId('subscription-create-auth-policy')).not.toBeInTheDocument();
+    await user.clear(name);await user.type(name,'Engineering updated');
+    await user.click(screen.getByTestId('update-subscription-button'));
+    expect(await screen.findByRole('link',{name:'Engineering updated'})).toBeVisible();
+    const info=await service.getInfo('engineering');expect(info.subscription.modelRefs[0].billingRate?.perToken).toBe('0.000002');
+    expect(info.subscription.tokenMetadata?.costCenter).toBe('engineering');
+  });
+  it('requires typed confirmation and retains the dialog on delete failure',async()=>{
+    const user=userEvent.setup();open('/subscriptions/view/engineering');
+    await screen.findByTestId('subscription-details-section');
+    await user.click(screen.getByTestId('subscription-actions-toggle'));
+    await user.click(screen.getByRole('menuitem',{name:'Delete'}));
+    const modal=await screen.findByTestId('delete-subscription-modal');
+    expect(within(modal).getByRole('button',{name:'Delete'})).toBeDisabled();
+    await user.type(screen.getByTestId('delete-modal-input'),'Engineering');
+    service.failNext('delete',new ServiceError('forbidden','Permission denied.'));
+    await user.click(within(modal).getByRole('button',{name:'Delete'}));
+    expect(await screen.findByTestId('delete-model-error-message-alert')).toHaveTextContent('Permission denied.');
+    expect(await service.getInfo('engineering')).toBeDefined();
+    await user.click(within(modal).getByRole('button',{name:'Delete'}));
+    await screen.findByTestId('subscriptions-table');
+    await waitFor(()=>expect(screen.queryByRole('link',{name:'Engineering'})).not.toBeInTheDocument());
+  });
+  it('edits an unlimited model without dropping controller-specific fields',async()=>{
+    const seed=structuredClone(subscriptions[0]);seed.owner.users=['alice'];seed.inferencePriority=-5;seed.guardrails=[{ref:{name:'safety'}}];
+    seed.modelRefs[0]={...seed.modelRefs[0],unlimited:true,tokenRateLimits:[],guardrails:[{ref:{name:'model-safety'}}]};
+    service=new MockSubscriptionService({seed:{subscriptions:[seed],policies:[]}});configureSubscriptionService(service);
+    const user=userEvent.setup();open('/subscriptions/edit/engineering');
+    const description=await screen.findByTestId('subscription-name-desc-description');
+    expect(screen.getByTestId('subscription-models-table')).toHaveTextContent('Unlimited');
+    await user.clear(description);await user.type(description,'Changed description');
+    await user.click(screen.getByTestId('update-subscription-button'));
+    await screen.findByTestId('subscriptions-table');
+    const saved=(await service.getInfo(seed.name)).subscription;
+    expect(saved.owner.users).toEqual(['alice']);expect(saved.inferencePriority).toBe(-5);expect(saved.guardrails).toEqual(seed.guardrails);
+    expect(saved.modelRefs[0]).toMatchObject({unlimited:true,tokenRateLimits:[],guardrails:seed.modelRefs[0].guardrails});
+  });
+  it('renders load failures and allows retry',async()=>{
+    service.failNext('list',new ServiceError('unavailable','Service unavailable.'));const user=userEvent.setup();open();
+    expect(await screen.findByTestId('error-empty-state')).toHaveTextContent('Service unavailable.');
+    await user.click(screen.getByRole('button',{name:'Retry'}));
+    expect(await screen.findByTestId('subscriptions-table')).toBeVisible();
+  });
+  it('preserves user input on update conflict',async()=>{
+    const user=userEvent.setup();open('/subscriptions/edit/engineering');
+    const description=await screen.findByTestId('subscription-name-desc-description');
+    await user.clear(description);await user.type(description,'Unsaved description');
+    const sub=(await service.getInfo('engineering')).subscription;
+    await service.update(sub.name,{owner:sub.owner,modelRefs:sub.modelRefs,priority:42},sub.revision!);
+    await user.click(screen.getByTestId('update-subscription-button'));
+    expect(await screen.findByText('This subscription changed. Reload it before saving or deleting.')).toBeVisible();
+    expect(description).toHaveValue('Unsaved description');
+  });
+});

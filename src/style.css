@@ -1,0 +1,20 @@
+html, body, #root { height: 100%; }
+.pf-v6-c-masthead.portal-masthead { display: flex; align-items: center; flex-wrap: nowrap; min-height: 4rem; border-bottom: 1px solid var(--pf-t--global--border--color--default); }
+.portal-masthead .pf-v6-c-masthead__main { display: flex; flex-direction: row; align-items: center; flex-wrap: nowrap; gap: var(--pf-t--global--spacer--md); flex: 1; min-width: 0; margin-inline-end: 0; }
+.portal-masthead .pf-v6-c-masthead__content { flex: 0 0 auto; margin-inline-start: auto; }
+.portal-masthead .pf-v6-c-masthead__brand { min-width: 0; align-self: center; align-items: center; padding-block: 0; border: 0; }
+/* The default logo width is sized for an image, rather than the console title. */
+.portal-masthead .pf-v6-c-masthead__logo { display: flex; align-items: center; width: auto; max-height: none; }
+.portal-masthead .pf-v6-c-title { margin: 0; font-weight: 600; white-space: nowrap; }
+.portal-masthead-tools { display: flex; align-items: center; justify-content: flex-end; width: 100%; gap: var(--pf-t--global--spacer--md); }
+@media (max-width: 575px) {
+  .portal-masthead .pf-v6-c-title { font-size: 1rem; }
+  .portal-masthead .pf-v6-c-masthead__content { margin-inline-start: auto; flex: 0 0 auto; }
+}
+.portal-page-heading { display: flex; justify-content: space-between; align-items: center; margin-block: var(--pf-t--global--spacer--md); }
+.portal-table-pagination { display: flex; justify-content: flex-end; }
+.portal-resource-table > tbody > tr > td { vertical-align: middle; }
+
+/* Keep all five navigation steps visible even when the step content is short. */
+.portal-model-wizard .pf-v6-c-wizard__inner-wrap { min-height: 24rem; }
+.portal-tenant-wizard .pf-v6-c-wizard__inner-wrap { min-height: 24rem; }

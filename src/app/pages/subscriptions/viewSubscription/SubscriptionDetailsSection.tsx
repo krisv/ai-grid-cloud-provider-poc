@@ -1,0 +1,104 @@
+// Adapted from opendatahub-io/odh-dashboard
+// packages/maas/frontend/src/app/pages/subscriptions/viewSubscription/SubscriptionDetailsSection.tsx
+// upstream commit: 8051fbbea117457b4da4074fb2856b732e6677a4
+import * as React from 'react';
+import {
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  Stack,
+  StackItem,
+  Timestamp,
+  Title,
+} from '@patternfly/react-core';
+import { fireMiscTrackingEvent } from '~/shared/telemetry';
+import { MaaSModelRefSummary, MaaSSubscription } from '~/app/types/subscriptions';
+import PhaseLabel from '~/app/shared/Phase/PhaseLabel';
+import {
+  getAffectedModels,
+  PhaseLabelLocation,
+  PhaseResourceType,
+} from '~/app/utilities/phaseLabelUtils';
+import {
+  EventTrackingPopoverType,
+  MaaSEvents,
+  MaaSGovernanceStatusPopoverViewedProperties,
+  convertStringToPopoverViewedStatus,
+} from '~/app/types/event-tracking';
+
+type SubscriptionDetailsSectionProps = {
+  subscription: MaaSSubscription;
+  modelRefs: MaaSModelRefSummary[];
+};
+
+const SubscriptionDetailsSection: React.FC<SubscriptionDetailsSectionProps> = ({
+  subscription,
+  modelRefs,
+}) => (
+  <Stack hasGutter data-testid="subscription-details-section">
+    <StackItem>
+      <Title headingLevel="h2" size="xl">
+        Details
+      </Title>
+    </StackItem>
+    <StackItem>
+      <DescriptionList columnModifier={{ default: '2Col' }}>
+        <DescriptionListGroup>
+          <DescriptionListTerm>Name</DescriptionListTerm>
+          <DescriptionListDescription>
+            {subscription.displayName?.trim() || subscription.name}
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+        <DescriptionListGroup>
+          <DescriptionListTerm>Status</DescriptionListTerm>
+          <DescriptionListDescription data-testid="subscription-phase">
+            <PhaseLabel
+              phase={subscription.phase}
+              statusMessage={subscription.statusMessage}
+              reason={subscription.reason}
+              status={subscription.status}
+              conditionType={subscription.conditionType}
+              lastTransitionTime={subscription.lastTransitionTime}
+              resourceType={PhaseResourceType.SUBSCRIPTION}
+              resourceName={subscription.displayName ?? subscription.name}
+              affectedModels={getAffectedModels(modelRefs)}
+              onClick={() => {
+                fireMiscTrackingEvent(MaaSEvents.MAAS_GOVERNANCE_STATUS_POPOVER_VIEWED, {
+                  popoverType: EventTrackingPopoverType.STATUS,
+                  status: convertStringToPopoverViewedStatus(subscription.phase),
+                  location: PhaseLabelLocation.DETAIL_PAGE,
+                } satisfies MaaSGovernanceStatusPopoverViewedProperties);
+              }}
+            />
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+        <DescriptionListGroup>
+          <DescriptionListTerm>Description</DescriptionListTerm>
+          <DescriptionListDescription>{subscription.description ?? '—'}</DescriptionListDescription>
+        </DescriptionListGroup>
+        <DescriptionListGroup>
+          <DescriptionListTerm>Resource name</DescriptionListTerm>
+          <DescriptionListDescription>{subscription.name}</DescriptionListDescription>
+        </DescriptionListGroup>
+        <DescriptionListGroup>
+          <DescriptionListTerm>Created</DescriptionListTerm>
+          <DescriptionListDescription>
+            {subscription.creationTimestamp ? (
+              <Timestamp
+                date={new Date(subscription.creationTimestamp)}
+                dateFormat="long"
+                timeFormat="short"
+                is12Hour
+              />
+            ) : (
+              '—'
+            )}
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+      </DescriptionList>
+    </StackItem>
+  </Stack>
+);
+
+export default SubscriptionDetailsSection;

@@ -1,0 +1,2843 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MaaS Administration PoC API",
+    "version": "0.1.0",
+    "description": "Cluster inventory, AI Grid enrollment and provisioning state use Git ManagedCluster CRs by default, or the ACM Hub when configured. Deployment locations come from Ready, provisioned AI Grid members. Tenants, models and subscriptions remain Git-backed. No namespace fields appear in public payloads."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Same-origin Git backend"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Clusters",
+      "description": "Live ACM Hub cluster inventory and AI Grid enrollment"
+    },
+    {
+      "name": "Tenants",
+      "description": "Tenant onboarding and OIDC identity provider configuration"
+    },
+    {
+      "name": "Subscriptions"
+    },
+    {
+      "name": "Models"
+    },
+    {
+      "name": "Health"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Check Git storage availability",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Repository is available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Repository unavailable or locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "List models for management and subscription selection",
+        "tags": [
+          "Models"
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete list; empty collections return []",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagedModel"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createModel",
+        "summary": "Create a model with deployment, MaaS registration and location placement",
+        "tags": [
+          "Models"
+        ],
+        "responses": {
+          "201": {
+            "description": "Deployment, registration and location placement resources saved atomically",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedModel"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision; copy the complete value into If-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Deployment details URL"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Unsupported method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate resource, referenced model or Git conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 1 MiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid deployment configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModel"
+              },
+              "example": {
+                "name": "example-model",
+                "displayName": "Example model",
+                "description": "Example deployment",
+                "modelUri": "hf://org/model",
+                "modelName": "org/model",
+                "runtimeImage": "registry.example/vllm:tag",
+                "replicas": 1,
+                "cpu": "2",
+                "memory": "4Gi",
+                "gpuCount": 0,
+                "runtimeArgs": [],
+                "locations": [
+                  "site1",
+                  "site2"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Validates selected locations against Ready, provisioned AI Grid members. Saves the deployment, MaaS registration, placement and workload distribution CRs atomically to Git."
+      }
+    },
+    "/subscriptions": {
+      "get": {
+        "operationId": "listSubscriptions",
+        "summary": "List subscriptions",
+        "tags": [
+          "Subscriptions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete list; empty collections return []",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Subscription"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Repository unavailable or locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSubscription",
+        "summary": "Create a subscription",
+        "tags": [
+          "Subscriptions"
+        ],
+        "responses": {
+          "201": {
+            "description": "Subscription and optional matching policy created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationResult"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision. Copy the complete value into If-Match for updates and deletes.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Location": {
+                "description": "Created subscription URL",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or invalid subscription name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name, dirty repository, or conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 1 MiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid subscription configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Repository unavailable or locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscription"
+              },
+              "example": {
+                "name": "example-team",
+                "displayName": "Example team",
+                "priority": 0,
+                "owner": {
+                  "groups": [
+                    {
+                      "name": "engineering"
+                    }
+                  ]
+                },
+                "modelRefs": [
+                  {
+                    "name": "granite-3-8b",
+                    "tokenRateLimits": [
+                      {
+                        "limit": 100000,
+                        "window": "1h"
+                      }
+                    ]
+                  }
+                ],
+                "createAuthPolicy": true
+              }
+            }
+          }
+        },
+        "description": "Creates a subscription and optional matching policy atomically. A leftover policy generated for this subscription by an earlier PoC version is replaced. Independently managed policy name collisions return 409."
+      }
+    },
+    "/subscriptions/{name}": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "description": "Stable subscription resource name",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getSubscription",
+        "summary": "Get subscription details",
+        "tags": [
+          "Subscriptions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription, matching catalog models, related policies and optional metering metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionInfo"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision. Copy the complete value into If-Match for updates and deletes.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or invalid subscription name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription or route not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid subscription configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Repository unavailable or locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateSubscription",
+        "summary": "Update a subscription",
+        "tags": [
+          "Subscriptions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription updated; separate policies unchanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationResult"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision. Copy the complete value into If-Match for updates and deletes.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or invalid subscription name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription or route not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name, dirty repository, or conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale If-Match revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 1 MiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid subscription configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Missing If-Match revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Repository unavailable or locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscription"
+              },
+              "example": {
+                "displayName": "Example team",
+                "priority": 0,
+                "owner": {
+                  "groups": [
+                    {
+                      "name": "engineering"
+                    }
+                  ]
+                },
+                "modelRefs": [
+                  {
+                    "name": "granite-3-8b",
+                    "tokenRateLimits": [
+                      {
+                        "limit": 100000,
+                        "window": "1h"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSubscription",
+        "summary": "Delete a subscription",
+        "tags": [
+          "Subscriptions"
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted; separately managed authorization policies remain"
+          },
+          "400": {
+            "description": "Malformed JSON or invalid subscription name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription or route not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name, dirty repository, or conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale If-Match revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid subscription configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Missing If-Match revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Repository unavailable or locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "description": "Atomically deletes the subscription and its automatically generated matching authorization policy. Independently managed policies are preserved."
+      }
+    },
+    "/locations": {
+      "get": {
+        "operationId": "listLocations",
+        "summary": "List deployment locations with Ready, provisioned AI Grid nodes",
+        "tags": [
+          "Models"
+        ],
+        "description": "Unique location labels of ManagedClusters that are Ready and carry both ai-grid/enabled: \"true\" and ai-grid/provisioned: \"true\", from the active Git or ACM Hub cluster source. Unenrolled, unprovisioned, unavailable, or unknown-status nodes are excluded.",
+        "responses": {
+          "200": {
+            "description": "Available locations; an empty catalog returns []",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "maxItems": 64,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 63,
+                    "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?$",
+                    "example": "site1"
+                  }
+                },
+                "example": [
+                  "site1",
+                  "site2",
+                  "site3"
+                ]
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/models/{name}": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getModel",
+        "summary": "Get a model",
+        "tags": [
+          "Models"
+        ],
+        "responses": {
+          "200": {
+            "description": "Deployment summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedModel"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision; copy the complete value into If-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deployment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid deployment configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteModel",
+        "summary": "Delete a model and its saved deployment",
+        "tags": [
+          "Models"
+        ],
+        "responses": {
+          "204": {
+            "description": "Model registration and associated deployment removed atomically; deletion is refused when subscriptions or policies reference any affected registration."
+          },
+          "400": {
+            "description": "Malformed JSON or identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deployment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Unsupported method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate resource, referenced model or Git conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid deployment configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Missing If-Match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP transport failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ]
+      }
+    },
+    "/tenants": {
+      "get": {
+        "operationId": "listTenants",
+        "summary": "List tenants and saved OIDC configuration",
+        "tags": [
+          "Tenants"
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete tenant list; an empty collection returns []",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tenant"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTenant",
+        "summary": "Create a tenant and its identity provider together",
+        "tags": [
+          "Tenants"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantInput"
+              },
+              "example": {
+                "name": "tenant1",
+                "domains": [
+                  "tenant1.example.com"
+                ],
+                "identityProvider": {
+                  "title": "Tenant 1 SSO",
+                  "description": "Tenant 1 identity provider",
+                  "enabled": true,
+                  "config": {
+                    "clientId": "tenant1-client",
+                    "clientSecretSecret": {
+                      "name": "tenant1-oidc-secret"
+                    },
+                    "issuer": "https://idp.example.com/realms/tenant1",
+                    "authorizationUrl": "https://idp.example.com/authorize",
+                    "tokenUrl": "https://idp.example.com/token",
+                    "defaultScopes": "openid profile email",
+                    "userInfoUrl": "",
+                    "jwksUrl": "",
+                    "logoutUrl": "",
+                    "validateSignature": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tenant and identity provider configuration saved together",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tenant"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision; copy the complete value into If-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Tenant name or domain already assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds 1 MiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid tenant or OIDC configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenants/{name}": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getTenant",
+        "summary": "Get a tenant and saved OIDC configuration",
+        "tags": [
+          "Tenants"
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tenant"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision; copy the complete value into If-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tenant not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateTenant",
+        "summary": "Update domains and identity provider configuration",
+        "tags": [
+          "Tenants"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantInput"
+              },
+              "example": {
+                "name": "tenant1",
+                "domains": [
+                  "tenant1.example.com"
+                ],
+                "identityProvider": {
+                  "title": "Tenant 1 SSO",
+                  "description": "Tenant 1 identity provider",
+                  "enabled": true,
+                  "config": {
+                    "clientId": "tenant1-client",
+                    "clientSecretSecret": {
+                      "name": "tenant1-oidc-secret"
+                    },
+                    "issuer": "https://idp.example.com/realms/tenant1",
+                    "authorizationUrl": "https://idp.example.com/authorize",
+                    "tokenUrl": "https://idp.example.com/token",
+                    "defaultScopes": "openid profile email",
+                    "userInfoUrl": "",
+                    "jwksUrl": "",
+                    "logoutUrl": "",
+                    "validateSignature": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuration saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tenant"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Quoted opaque revision; copy the complete value into If-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tenant not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain already assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Revision changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid configuration or attempted name change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTenant",
+        "summary": "Delete a tenant and its saved identity provider configuration",
+        "tags": [
+          "Tenants"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          }
+        ],
+        "description": "Removes this tenant configuration and its embedded IdP configuration. Models and subscriptions are independent and are not deleted.",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Tenant not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Revision changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resource repository unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters": {
+      "get": {
+        "operationId": "listClusters",
+        "summary": "List all ACM Hub ManagedClusters and AI Grid membership",
+        "tags": [
+          "Clusters"
+        ],
+        "description": "Reads ManagedCluster CRs from Git when no ACM Hub settings are supplied; otherwise reads the configured live Hub and follows every list page. Availability and provisioning are separate from AI Grid membership.",
+        "responses": {
+          "200": {
+            "description": "Cluster summaries; no managed clusters returns []",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GridCluster"
+                  }
+                },
+                "example": [
+                  {
+                    "name": "site1",
+                    "location": "site1",
+                    "status": "Ready",
+                    "aiGridEnabled": true,
+                    "provisioned": true,
+                    "provisioningStatus": "Provisioned"
+                  },
+                  {
+                    "name": "site2",
+                    "location": "site2",
+                    "status": "Ready",
+                    "aiGridEnabled": true,
+                    "provisioned": true,
+                    "provisioningStatus": "Provisioned"
+                  },
+                  {
+                    "name": "site3",
+                    "location": "site3",
+                    "status": "Ready",
+                    "aiGridEnabled": true,
+                    "provisioned": true,
+                    "provisioningStatus": "Provisioned"
+                  },
+                  {
+                    "name": "site4",
+                    "location": "site4",
+                    "status": "Ready",
+                    "aiGridEnabled": false,
+                    "provisioned": false,
+                    "provisioningStatus": "Not provisioned"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "ACM Hub rejected backend credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Backend credentials lack ManagedCluster RBAC permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ManagedCluster or ACM API not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Hub configuration, connection, response, or timeout failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{name}": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "enrollCluster",
+        "summary": "Add a ManagedCluster to AI Grid",
+        "tags": [
+          "Clusters"
+        ],
+        "description": "Sets metadata.labels[\"ai-grid/enabled\"] to \"true\", preserving other labels. In file mode it updates the stored ManagedCluster CR; in live mode it PATCHes the ACM Hub. Enrollment alone does not set ai-grid/provisioned. Repeated enrollment is idempotent.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "aiGridEnabled"
+                ],
+                "properties": {
+                  "aiGridEnabled": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "aiGridEnabled": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI Grid membership saved; provisioning may still be in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GridCluster"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "ACM Hub rejected backend credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Backend credentials lack ManagedCluster RBAC permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ManagedCluster or ACM API not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Hub configuration, connection, response, or timeout failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON or identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Unsupported method",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ManagedCluster conflict; refresh before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Content-Type must be application/json",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid name or enrollment request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Group": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "User-entered group name; existence is not checked."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Owner": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            },
+            "minItems": 1
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "groups"
+        ]
+      },
+      "TokenRateLimit": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "window": {
+            "type": "string",
+            "pattern": "^[1-9]\\d{0,3}[smh]$",
+            "example": "1h"
+          }
+        },
+        "required": [
+          "limit",
+          "window"
+        ]
+      },
+      "TokenMetadata": {
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string"
+          },
+          "costCenter": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Guardrail": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 253,
+                "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63
+            },
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "ref"
+        ]
+      },
+      "ModelReference": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "ModelSubscriptionRef": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "unlimited": {
+            "type": "boolean"
+          },
+          "tokenRateLimits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenRateLimit"
+            }
+          },
+          "billingRate": {
+            "type": "object",
+            "properties": {
+              "perToken": {
+                "type": "string",
+                "description": "Decimal string, preserved without numeric conversion."
+              }
+            },
+            "required": [
+              "perToken"
+            ]
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Guardrail"
+            },
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "name",
+          "tokenRateLimits"
+        ],
+        "description": "Model identities must be unique within a subscription. tokenRateLimits must contain at least one limit unless unlimited is true; unlimited models require an empty array."
+      },
+      "ModelSummary": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "statusMessage": {
+            "type": "string"
+          },
+          "conditionType": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "lastTransitionTime": {
+            "type": "string"
+          },
+          "creationTimestamp": {
+            "type": "string"
+          },
+          "deletionTimestamp": {
+            "type": "string"
+          },
+          "modelRef": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ]
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "name",
+          "modelRef"
+        ]
+      },
+      "AuthorizationPolicy": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "statusMessage": {
+            "type": "string"
+          },
+          "conditionType": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "lastTransitionTime": {
+            "type": "string"
+          },
+          "creationTimestamp": {
+            "type": "string"
+          },
+          "deletionTimestamp": {
+            "type": "string"
+          },
+          "modelRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelReference"
+            }
+          },
+          "subjects": {
+            "type": "object",
+            "properties": {
+              "groups": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              },
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "meteringMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          }
+        },
+        "required": [
+          "name",
+          "modelRefs",
+          "subjects"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "validation",
+              "not_found",
+              "conflict",
+              "unavailable"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "storage": {
+            "type": "string",
+            "enum": [
+              "git"
+            ]
+          },
+          "autoCommit": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "status",
+          "storage",
+          "autoCommit"
+        ]
+      },
+      "UpdateSubscription": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "owner": {
+            "$ref": "#/components/schemas/Owner"
+          },
+          "modelRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelSubscriptionRef"
+            },
+            "minItems": 1
+          },
+          "tokenMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "inferencePriority": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Guardrail"
+            },
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "priority",
+          "owner",
+          "modelRefs"
+        ],
+        "description": "Replaces editable fields. Omitted tokenMetadata, inferencePriority and guardrails are preserved; omitted description is cleared. Separate policies are unchanged."
+      },
+      "CreateSubscription": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "owner": {
+            "$ref": "#/components/schemas/Owner"
+          },
+          "modelRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelSubscriptionRef"
+            },
+            "minItems": 1
+          },
+          "tokenMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "inferencePriority": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Guardrail"
+            },
+            "maxItems": 64
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+          },
+          "createAuthPolicy": {
+            "type": "boolean",
+            "description": "Create a matching separate policy atomically. When true, name must be at most 246 characters."
+          }
+        },
+        "required": [
+          "name",
+          "createAuthPolicy",
+          "priority",
+          "owner",
+          "modelRefs"
+        ]
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "owner": {
+            "$ref": "#/components/schemas/Owner"
+          },
+          "modelRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelSubscriptionRef"
+            },
+            "minItems": 1
+          },
+          "tokenMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          },
+          "inferencePriority": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Guardrail"
+            },
+            "maxItems": 64
+          },
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "statusMessage": {
+            "type": "string"
+          },
+          "conditionType": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "lastTransitionTime": {
+            "type": "string"
+          },
+          "creationTimestamp": {
+            "type": "string"
+          },
+          "deletionTimestamp": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque revision; quote it in If-Match."
+          }
+        },
+        "required": [
+          "name",
+          "revision",
+          "owner",
+          "modelRefs"
+        ]
+      },
+      "SubscriptionInfo": {
+        "type": "object",
+        "properties": {
+          "subscription": {
+            "$ref": "#/components/schemas/Subscription"
+          },
+          "modelRefs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelSummary"
+            }
+          },
+          "authPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationPolicy"
+            }
+          },
+          "meteringMetadata": {
+            "$ref": "#/components/schemas/TokenMetadata"
+          }
+        },
+        "required": [
+          "subscription",
+          "modelRefs",
+          "authPolicies"
+        ]
+      },
+      "MutationResult": {
+        "type": "object",
+        "properties": {
+          "subscription": {
+            "$ref": "#/components/schemas/Subscription"
+          },
+          "authPolicy": {
+            "$ref": "#/components/schemas/AuthorizationPolicy"
+          }
+        },
+        "required": [
+          "subscription"
+        ]
+      },
+      "CreateModel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "modelUri": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^(hf|oci|s3|pvc|https?)://[^\\s]+$"
+          },
+          "modelName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "runtimeImage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^\\S+$"
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99
+          },
+          "cpu": {
+            "type": "string",
+            "pattern": "^(?:[1-9]\\d*|0\\.[0-9]*[1-9]\\d*|[1-9]\\d*\\.\\d+|[1-9]\\d*m)$",
+            "example": "2"
+          },
+          "memory": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*(?:Mi|Gi|Ti)$",
+            "example": "4Gi"
+          },
+          "gpuCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64,
+            "description": "NVIDIA GPU limit per replica; zero omits it."
+          },
+          "runtimeArgs": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "description": "Blank lines and comment lines beginning with # are removed. Other lines are joined into VLLM_ADDITIONAL_ARGS."
+          },
+          "locations": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63,
+              "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?$",
+              "example": "site1"
+            },
+            "minItems": 1,
+            "description": "Select one or more values returned by GET /locations."
+          }
+        },
+        "required": [
+          "name",
+          "displayName",
+          "modelUri",
+          "modelName",
+          "runtimeImage",
+          "replicas",
+          "cpu",
+          "memory",
+          "gpuCount",
+          "runtimeArgs",
+          "locations"
+        ],
+        "description": "Atomically saves LLMInferenceService, MaaSModelRef, ACM-style Placement and ManifestWorkReplicaSet resources in Git. No cluster requests are made."
+      },
+      "ManagedModel": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Saved",
+              "Registered"
+            ]
+          },
+          "statusMessage": {
+            "type": "string"
+          },
+          "conditionType": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "lastTransitionTime": {
+            "type": "string"
+          },
+          "creationTimestamp": {
+            "type": "string"
+          },
+          "deletionTimestamp": {
+            "type": "string"
+          },
+          "modelRef": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ]
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque revision covers the deployment and associated MaaS registration content."
+          },
+          "modelUri": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^(hf|oci|s3|pvc|https?)://[^\\s]+$"
+          },
+          "modelName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 253
+          },
+          "runtimeImage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^\\S+$"
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99
+          },
+          "hasDeployment": {
+            "type": "boolean",
+            "description": "False for existing catalog entries without a deployment CR."
+          },
+          "availableForSubscriptions": {
+            "type": "boolean",
+            "description": "True when this model has a MaaS registration. Legacy unpublished deployment records remain manageable but are not offered to subscriptions."
+          },
+          "locations": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63,
+              "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?$",
+              "example": "site1"
+            },
+            "description": "Locations selected by the model placement. Legacy models without placement return []."
+          }
+        },
+        "required": [
+          "name",
+          "modelRef",
+          "revision",
+          "hasDeployment",
+          "availableForSubscriptions",
+          "locations"
+        ]
+      },
+      "TenantInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "domains",
+          "identityProvider"
+        ],
+        "description": "Onboard or update a tenant and one OIDC identity provider atomically. The name is immutable on update. Domain names are normalized to lowercase and unique across tenants. No break-glass credentials or raw client secrets are accepted.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+          },
+          "domains": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$"
+            },
+            "description": "Domains for tenant discovery; the first is the primary domain. May be empty."
+          },
+          "identityProvider": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "config"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 253,
+                "default": ""
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 4000,
+                "default": ""
+              },
+              "enabled": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ],
+                "default": true
+              },
+              "config": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "clientId",
+                  "clientSecretSecret",
+                  "issuer",
+                  "authorizationUrl",
+                  "tokenUrl"
+                ],
+                "properties": {
+                  "clientId": {
+                    "type": "string",
+                    "maxLength": 253,
+                    "minLength": 1
+                  },
+                  "clientSecretSecret": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "maxLength": 253,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$",
+                        "description": "Existing secret reference name; the API never accepts a client secret value."
+                      }
+                    }
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "pattern": "^https?://"
+                  },
+                  "authorizationUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "pattern": "^https?://"
+                  },
+                  "tokenUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "pattern": "^https?://"
+                  },
+                  "defaultScopes": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "default": ""
+                  },
+                  "userInfoUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "pattern": "^$|^https?://",
+                    "default": ""
+                  },
+                  "jwksUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "pattern": "^$|^https?://",
+                    "default": ""
+                  },
+                  "logoutUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "pattern": "^$|^https?://",
+                    "default": ""
+                  },
+                  "validateSignature": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Tenant": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "domains",
+          "identityProvider",
+          "status",
+          "revision",
+          "creationTimestamp",
+          "updatedAt"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+          },
+          "domains": {
+            "type": "array",
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$"
+            },
+            "description": "Domains for tenant discovery; the first is the primary domain. May be empty."
+          },
+          "identityProvider": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "config"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 253,
+                "default": ""
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 4000,
+                "default": ""
+              },
+              "enabled": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ],
+                "default": true
+              },
+              "config": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "clientId",
+                  "clientSecretSecret",
+                  "issuer",
+                  "authorizationUrl",
+                  "tokenUrl"
+                ],
+                "properties": {
+                  "clientId": {
+                    "type": "string",
+                    "maxLength": 253,
+                    "minLength": 1
+                  },
+                  "clientSecretSecret": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "maxLength": 253,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$",
+                        "description": "Existing secret reference name; the API never accepts a client secret value."
+                      }
+                    }
+                  },
+                  "issuer": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "pattern": "^https?://"
+                  },
+                  "authorizationUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "pattern": "^https?://"
+                  },
+                  "tokenUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "pattern": "^https?://"
+                  },
+                  "defaultScopes": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "default": ""
+                  },
+                  "userInfoUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "pattern": "^$|^https?://",
+                    "default": ""
+                  },
+                  "jwksUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "pattern": "^$|^https?://",
+                    "default": ""
+                  },
+                  "logoutUrl": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "pattern": "^$|^https?://",
+                    "default": ""
+                  },
+                  "validateSignature": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Saved"
+            ],
+            "readOnly": true
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1,
+            "readOnly": true
+          },
+          "creationTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "GridCluster": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "status",
+          "aiGridEnabled",
+          "provisioned",
+          "provisioningStatus"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Ready",
+              "Offline",
+              "Unknown"
+            ],
+            "description": "ManagedClusterConditionAvailable True -> Ready; False -> Offline; missing/Unknown -> Unknown."
+          },
+          "aiGridEnabled": {
+            "type": "boolean",
+            "description": "True only when metadata.labels[\"ai-grid/enabled\"] is exactly the string \"true\"."
+          },
+          "location": {
+            "type": "string",
+            "description": "ManagedCluster location label, used for model placement."
+          },
+          "provisioned": {
+            "type": "boolean",
+            "description": "True only when metadata.labels[\"ai-grid/provisioned\"] is exactly \"true\"."
+          },
+          "provisioningStatus": {
+            "type": "string",
+            "enum": [
+              "Provisioned",
+              "Provisioning",
+              "Not provisioned"
+            ]
+          }
+        }
+      }
+    },
+    "parameters": {
+      "IfMatch": {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "description": "Quoted opaque revision from the resource ETag. Missing: 428; stale: 412. Include the double quotes.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "\"replace-with-current-revision\""
+      }
+    }
+  }
+}

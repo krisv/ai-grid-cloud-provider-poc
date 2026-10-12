@@ -1,0 +1,81 @@
+{
+  "repository": "https://github.com/osac-project/osac",
+  "commit": "8cb0a227e45cc9b17421b6e79ce493ed370ebd5d",
+  "referenceCheckout": "/tmp/osac-tenant-source",
+  "sourceAcquisition": "Local clone of an existing checkout after GitHub DNS resolution failed.",
+  "adaptation": "Combined tenant and OIDC onboarding using existing PatternFly/Zod/REST/Git boundaries. Break-glass omitted; no upstream Formik, protobuf, auth or live reconciliation dependencies.",
+  "files": [
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantListPage.tsx",
+      "local": "src/app/pages/tenants/TenantListPage.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantActionsMenu.tsx",
+      "local": "src/app/pages/tenants/TenantListPage.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantStatusLabel.tsx",
+      "local": "src/app/pages/tenants/TenantListPage.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantCreatePage/TenantCreatePage.tsx",
+      "local": "src/app/pages/tenants/TenantFormWizard.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantCreatePage/validation.ts",
+      "local": "shared/tenant-validation.mjs"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/IdentityProviderCreateWizard.tsx",
+      "local": "src/app/pages/tenants/TenantFormWizard.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/steps/IdpGeneralStep.tsx",
+      "local": "src/app/pages/tenants/IdentityProviderFields.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/steps/IdpConfigurationStep.tsx",
+      "local": "src/app/pages/tenants/IdentityProviderFields.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/steps/IdpReviewStep.tsx",
+      "local": "src/app/pages/tenants/TenantConfigurationDetails.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/validation.ts",
+      "local": "shared/tenant-validation.mjs"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/values.ts",
+      "local": "src/app/pages/tenants/TenantFormWizard.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/IdentityProvider/CreateWizard/payload.ts",
+      "local": "backend/tenants.mjs"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantListPage.test.tsx",
+      "local": "src/app/__tests__/tenants.test.tsx"
+    },
+    {
+      "upstream": "osac-ui/libs/ui-components/src/components/Tenant/TenantCreatePage/TenantCreatePage.test.tsx",
+      "local": "src/app/__tests__/tenants.test.tsx"
+    }
+  ],
+  "shellReferences": [
+    "osac-ui/apps/app-frontend/src/shell/TenantRoutes.tsx",
+    "osac-ui/apps/app-frontend/src/shell/AppShell.tsx",
+    "osac-ui/apps/app-frontend/src/shell/shellNav.ts",
+    "osac-ui/apps/app-frontend/src/shell/shellRoutes.ts"
+  ],
+  "reviewedReferences": [
+    "osac-ui/libs/ui-components/src/components/Tenant/TenantCreatePage/values.ts",
+    "osac-ui/libs/ui-components/src/components/Tenant/TenantCreatePage/BreakGlassCredentialModal.tsx",
+    "osac-ui/libs/ui-components/src/components/IdentityProvider/IdentityProviderListPage.tsx",
+    "osac-ui/libs/ui-components/src/components/IdentityProvider/IdentityProviderRoutes.tsx",
+    "osac-ui/libs/ui-components/src/components/IdentityProvider/IdentityProviderActionsMenu.tsx",
+    "osac-ui/libs/ui-components/src/components/IdentityProvider/IdentityProviderEnableModal.tsx",
+    "osac-ui/libs/ui-components/src/components/IdentityProvider/IdentityProviderStatusLabel.tsx",
+    "osac-ui/libs/ui-components/src/components/IdentityProvider/utils.ts"
+  ]
+}

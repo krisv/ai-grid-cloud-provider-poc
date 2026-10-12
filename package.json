@@ -1,0 +1,40 @@
+{
+  "name": "maas-admin-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run && npm run test:backend",
+    "backend": "node backend/server.mjs",
+    "dev:git": "node scripts/dev-git.mjs",
+    "test:backend": "node --test backend/__tests__/*.test.mjs"
+  },
+  "dependencies": {
+    "@patternfly/patternfly": "~6.6.1",
+    "@patternfly/react-core": "~6.6.1",
+    "@patternfly/react-icons": "~6.6.1",
+    "@patternfly/react-table": "~6.6.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "^7.18.2",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.1",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/jest-dom": "^6.6.2",
+    "@testing-library/user-event": "14.6.1",
+    "jsdom": "^28.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.1",
+    "vitest": "4.0.18"
+  }
+}

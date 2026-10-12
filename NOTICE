@@ -1,0 +1,13 @@
+MaaS Administration Portal
+
+This project includes code adapted from Open Data Hub Dashboard:
+https://github.com/opendatahub-io/odh-dashboard
+Commit: 8051fbbea117457b4da4074fb2856b732e6677a4
+Licensed under the Apache License, Version 2.0.
+Original paths and attribution are recorded in source comments and docs/upstream-provenance.json.
+
+Tenant and identity-provider functionality is adapted from OSAC:
+https://github.com/osac-project/osac
+Commit: 8cb0a227e45cc9b17421b6e79ce493ed370ebd5d
+Licensed under the Apache License, Version 2.0.
+Original paths and adaptation scope are recorded in docs/osac-provenance.json and docs/tenant-onboarding.md.
