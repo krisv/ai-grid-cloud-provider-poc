@@ -3,7 +3,11 @@ import type { Tenant, TenantInput } from '~/app/types/tenants';
 import type { GridCluster } from '~/app/types/clusters';
 import type { CreateSubscriptionRequest, CreateSubscriptionResponse, MaaSModelRefSummary,
   MaaSSubscription, SubscriptionInfoResponse, UpdateSubscriptionRequest } from '~/app/types/subscriptions';
+import { z } from 'zod';
+import { gridOverviewSchema } from '../../../shared/grid-monitoring.mjs';
+export type GridOverview=z.infer<typeof gridOverviewSchema>;
 export interface SubscriptionService {
+  getGridOverview(range: string,site?:string,includeMetrics?:boolean): Promise<GridOverview>;
   listClusters(): Promise<GridCluster[]>;
   enrollCluster(name:string): Promise<GridCluster>;
   listTenants(): Promise<Tenant[]>;

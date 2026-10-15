@@ -2,6 +2,7 @@ import { ApiError, validate } from './errors.mjs';
 import { serveApiDocs } from './api-docs.mjs';
 import { createModelApi } from './models.mjs';
 import { createTenantApi } from './tenants.mjs';
+import { createGridApi } from './grid-monitoring.mjs';
 import { createClusterApi } from './clusters.mjs';
 import { ACMHubClient, hasHubConfiguration } from './ACMHubClient.mjs';
 import { GitClusterClient } from './GitClusterClient.mjs';
@@ -33,6 +34,7 @@ async function readJson(request) {
 /** @param {any} store @param {{hub?: ACMHubClient | GitClusterClient, env?: Record<string,string|undefined>}} [options] */
 export function createApi(store,{hub,env=process.env}={}) {
   const clusterSource=hub ?? (hasHubConfiguration(env) ? new ACMHubClient({env}) : new GitClusterClient(store));
+  const gridApi=createGridApi(clusterSource,{json,env});
   const clusterApi=createClusterApi(clusterSource,{json,readJson});
   const modelApi=createModelApi(store,{json,readJson,clusterSource});
   const tenantApi=createTenantApi(store,{json,readJson});
@@ -41,6 +43,8 @@ export function createApi(store,{hub,env=process.env}={}) {
       const url=new URL(request.url);const path=url.pathname;
       const docs=await serveApiDocs(request);
       if(docs)return docs;
+      const gridResponse=await gridApi(request);
+      if(gridResponse)return gridResponse;
       const clusterResponse=await clusterApi(request);
       if(clusterResponse)return clusterResponse;
       const tenantResponse=await tenantApi(request);

@@ -1,9 +1,10 @@
+import { demoMetrics } from '../../../shared/grid-monitoring.mjs';
 import type { CreateModelRequest, ManagedModel } from '~/app/types/models';
 import type { MaaSModelRefSummary } from '~/app/types/subscriptions';
 import { createModelSchema, defaultLocations } from '../../../shared/model-validation.mjs';
 import type { CreateSubscriptionRequest, CreateSubscriptionResponse, MaaSAuthPolicy, MaaSSubscription, SubscriptionInfoResponse, UpdateSubscriptionRequest } from '~/app/types/subscriptions';
 import { createSchema, updateSchema, validateInput } from '~/app/adapters/subscriptions';
-import { ServiceError, type SubscriptionService } from './SubscriptionService';
+import { ServiceError, type SubscriptionService, type GridOverview } from './SubscriptionService';
 import * as fixtures from './fixtures';
 import { withoutNamespace } from '../../../shared/public-data.mjs';
 import { tenantInputSchema } from '../../../shared/tenant-validation.mjs';
@@ -11,6 +12,16 @@ import type { Tenant, TenantInput } from '~/app/types/tenants';
 import type { GridCluster } from '~/app/types/clusters';
 type State = { tenants?:Tenant[]; managedPolicyNames?:string[]; subscriptions: MaaSSubscription[]; policies: MaaSAuthPolicy[]; models?:MaaSModelRefSummary[]; deployments?:Array<CreateModelRequest & {revision:string;creationTimestamp:string}> };
 export class MockSubscriptionService implements SubscriptionService {
+  async getGridOverview(range:string,site?:string,includeMetrics=true):Promise<GridOverview> {
+    await this.before('getGridOverview');
+    const sites=[['brussels','Brussels',50.8503,4.3517],['new-york','New York',40.7128,-74.0060],['san-francisco','San Francisco',37.7749,-122.4194]] as const;
+    const clusters=sites.map(([id,siteName,latitude,longitude],index)=>({name:`demo-${id}`,site:id,siteName,latitude,longitude,location:id,
+      aiGridEnabled:true,provisioned:true,provisioningStatus:'Provisioned' as const,status:index===1 ? 'Offline' as const : 'Ready' as const})).filter(c=>!site || c.site===site);
+    const end=Math.floor(Date.now()/1000),duration=range==='24h' ? 86400 : range==='6h' ? 21600 : 3600;
+    return {updatedAt:new Date().toISOString(),inventorySource:'demo' as const,demo:true,metricsSource:'demo' as const,clusters,
+      metrics:!includeMetrics ? [] : demoMetrics(clusters,end-duration,end,Math.ceil(duration/60)) as GridOverview['metrics']};
+  }
+
   private state: State;
   private failure?: {operation: keyof SubscriptionService; error: ServiceError};
   constructor(private options: {storage?: Storage; storageKey?: string; delay?: number; seed?: State} = {}) {

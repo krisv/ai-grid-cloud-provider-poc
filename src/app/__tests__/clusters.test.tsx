@@ -27,11 +27,11 @@ beforeEach(()=>{
   const api=createApi({snapshot:async()=>({models:[],deployments:[],placements:[],works:[],locations:[],subscriptions:[],policies:[],tenants:[]})} as never,{hub});
   configureSubscriptionService(new HttpSubscriptionService('/api',(url,options)=>api(new Request(new URL(String(url),'http://localhost'),options))));
 });
-it('lists live Hub states, puts Clusters first and enrolls with a label-only PATCH',async()=>{
+it('lists live Hub states, includes AI Grid navigation and enrolls with a label-only PATCH',async()=>{
   const user=userEvent.setup();render(<MemoryRouter initialEntries={['/']}><App /></MemoryRouter>);
   const table=await screen.findByTestId('clusters-table');
   const nav=screen.getByRole('navigation',{name:'Portal navigation'});
-  expect(within(nav).getAllByRole('link').map(link=>link.textContent)).toEqual(['Clusters','Tenants','Models','Subscriptions']);
+  expect(within(nav).getAllByRole('link').map(link=>link.textContent)).toEqual(['AI Grid','Monitoring','Clusters','Tenants','Models','Subscriptions']);
   const member=within(table).getByText('cluster-a').closest('tr')!;expect(member).toHaveTextContent('AI Grid Member');
   expect(within(member).queryByRole('button')).not.toBeInTheDocument();
   const offline=within(table).getByText('cluster-c').closest('tr')!;expect(offline).toHaveTextContent('Offline');expect(offline).toHaveTextContent('Not enrolled');

@@ -1693,6 +1693,63 @@
           }
         }
       }
+    },
+    "/grid/overview": {
+      "get": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Enrolled AI Grid inventory and Thanos metric series",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1h",
+                "6h",
+                "24h"
+              ],
+              "default": "1h"
+            }
+          },
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "metrics",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "Set false for inventory-only responses without Thanos queries."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory with independently reported metric availability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GridOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid time range"
+          },
+          "503": {
+            "description": "Cluster inventory unavailable"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2823,6 +2880,124 @@
               "Provisioning",
               "Not provisioned"
             ]
+          },
+          "site": {
+            "type": "string"
+          },
+          "siteName": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          }
+        }
+      },
+      "GridMetric": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "unit",
+          "status",
+          "points"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "not-configured",
+              "unavailable",
+              "no-data"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "timestamp",
+                "value"
+              ],
+              "properties": {
+                "timestamp": {
+                  "type": "number",
+                  "description": "Unix seconds"
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "GridOverview": {
+        "type": "object",
+        "required": [
+          "updatedAt",
+          "inventorySource",
+          "demo",
+          "clusters",
+          "metrics"
+        ],
+        "properties": {
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "inventorySource": {
+            "type": "string",
+            "enum": [
+              "acm",
+              "git",
+              "demo"
+            ]
+          },
+          "demo": {
+            "type": "boolean"
+          },
+          "clusters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GridCluster"
+            }
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GridMetric"
+            }
+          },
+          "metricsSource": {
+            "type": "string",
+            "enum": [
+              "thanos",
+              "demo"
+            ],
+            "description": "Demo metrics are generated when Thanos is unconfigured; inventory retains its actual source."
           }
         }
       }

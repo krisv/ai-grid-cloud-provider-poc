@@ -12,6 +12,7 @@ import ModelWizard from './pages/models/ModelWizard';
 import TenantListPage from './pages/tenants/TenantListPage';
 import TenantWizardPage from './pages/tenants/TenantWizardPage';
 import TenantDetailsPage from './pages/tenants/TenantDetailsPage';
+import GridPage from './pages/grid/GridPage';
 import ClustersPage from './pages/clusters/ClustersPage';
 import { useEffect, useState } from 'react';
 export default function App() {
@@ -30,6 +31,8 @@ export default function App() {
       </Dropdown>
     </div></MastheadContent></Masthead>;
   const sidebar=<PageSidebar id="portal-sidebar" isSidebarOpen={sidebarOpen}><PageSidebarBody><Nav aria-label="Portal navigation"><NavList>
+    <NavItem isActive={location.pathname==='/ai-grid'}><Link to="/ai-grid">AI Grid</Link></NavItem>
+    <NavItem isActive={location.pathname==='/monitoring'}><Link to="/monitoring">Monitoring</Link></NavItem>
     <NavItem isActive={location.pathname.startsWith('/clusters')}><Link to="/clusters">Clusters</Link></NavItem>
     <NavItem isActive={location.pathname.startsWith('/tenants')}><Link to="/tenants">Tenants</Link></NavItem>
     <NavItem isActive={location.pathname.startsWith('/models')}><Link to="/models">Models</Link></NavItem>
@@ -38,6 +41,8 @@ export default function App() {
   return <MaaSGovernanceProvider><Page masthead={masthead} sidebar={sidebar}>
     {notice && <AlertGroup isToast><Alert variant="success" title={notice} actionClose={<AlertActionCloseButton onClose={()=>setNotice(undefined)} />} /></AlertGroup>}
     <Routes><Route path="/" element={<Navigate to="/clusters" replace />} />
+      <Route path="/ai-grid" element={<GridPage />} />
+      <Route path="/monitoring" element={<GridPage monitoring />} />
       <Route path="/clusters" element={<ClustersPage />} />
       <Route path="/tenants" element={<TenantListPage />} />
       <Route path="/tenants/create" element={<TenantWizardPage />} />

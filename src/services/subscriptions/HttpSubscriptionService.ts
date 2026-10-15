@@ -1,3 +1,4 @@
+import { gridOverviewSchema } from '../../../shared/grid-monitoring.mjs';
 import type { CreateModelRequest } from '~/app/types/models';
 import { managedModelSchema, parseManagedModels } from '~/app/adapters/models';
 import { locationsSchema } from '../../../shared/model-validation.mjs';
@@ -40,6 +41,10 @@ export class HttpSubscriptionService implements SubscriptionService {
     }
     if (response.status===204) return undefined;
     try { return await response.json(); } catch { throw new ServiceError('invalid_response','The subscription API returned an invalid response.'); }
+  }
+  async getGridOverview(range:string,site?:string,includeMetrics=true) {
+    const query=new URLSearchParams({range,...(site ? {site} : {}),...(!includeMetrics ? {metrics:'false'} : {})});
+    return parseResponse(gridOverviewSchema,await this.request(`/grid/overview?${query}`));
   }
   async list() { return parseResponse(z.array(subscriptionSchema),await this.request('/subscriptions')); }
   async getInfo(name: string) { return parseResponse(infoSchema,await this.request(`/subscriptions/${encodeURIComponent(name)}`)); }

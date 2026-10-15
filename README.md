@@ -42,3 +42,5 @@ Model management: choose **Models** in the sidebar, then **Deploy model**. The f
 The unified `/api/models` API supports listing and creation, with details/deletion at `/api/models/{name}`, including each model’s `locations` array. Namespace is configured only in the backend and is absent from REST URLs and payloads. `GET /api/locations` derives locations from Ready, provisioned AI Grid members (initially site1, site2, site3). Model management and subscription selection use the same list; `/api/deployments` has been removed. Existing catalog-only models remain visible with no invented deployment settings.
 
 AI Grid cluster management: run `npm run dev:git` without Hub settings for Git CRs, or configure `ACM_HUB_URL`, `ACM_HUB_TOKEN_FILE`, and optionally `ACM_HUB_CA_FILE` for a live Hub. The Clusters page lists ACM ManagedClusters and adds `ai-grid/enabled: "true"` through a label-only merge patch. See [AI Grid cluster setup, API and RBAC](docs/ai-grid-clusters.md).
+
+See [AI Grid overview and monitoring](docs/grid-monitoring.md) for site metadata, Thanos configuration, and the dashboard API.

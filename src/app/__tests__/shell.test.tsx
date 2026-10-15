@@ -22,7 +22,7 @@ it('collapses and expands navigation while keeping the header and settings acces
   await user.keyboard('{Escape}');
   await user.click(screen.getByRole('button', { name: 'Expand navigation' }));
   const nav = screen.getByRole('navigation', { name: 'Portal navigation' });
-  expect(within(nav).getAllByRole('link').map(link => link.textContent)).toEqual(['Clusters', 'Tenants', 'Models', 'Subscriptions']);
+  expect(within(nav).getAllByRole('link').map(link => link.textContent)).toEqual(['AI Grid', 'Monitoring', 'Clusters', 'Tenants', 'Models', 'Subscriptions']);
   await user.click(within(nav).getByRole('link', { name: 'Subscriptions' }));
   expect(await screen.findByRole('heading', { name: 'Subscriptions' })).toBeVisible();
 });

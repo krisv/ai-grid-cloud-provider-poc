@@ -17,7 +17,7 @@ test('no Hub configuration uses Git with three provisioned sites and one availab
   const {store,request}=await setup(t);const response=await request('/clusters');assert.equal(response.status,200);
   const clusters=await response.json();assert.equal(clusters.length,4);
   for(const cluster of clusters.slice(0,3)) {assert.equal(cluster.provisioned,true);assert.equal(cluster.aiGridEnabled,true);assert.equal(cluster.status,'Ready');}
-  assert.deepEqual(clusters[3],{name:'site4',location:'site4',status:'Ready',aiGridEnabled:false,provisioned:false,provisioningStatus:'Not provisioned'});
+  assert.deepEqual(clusters[3],{name:'site4',location:'site4',status:'Ready',aiGridEnabled:false,provisioned:false,provisioningStatus:'Not provisioned',site:'sydney',siteName:'Sydney',region:'asia-pacific',latitude:-33.8688,longitude:151.2093});
   assert.deepEqual(await (await request('/locations')).json(),['site1','site2','site3']);
   const enrolled=await request('/clusters/site4','PATCH',{aiGridEnabled:true});assert.equal(enrolled.status,200);
   assert.equal((await enrolled.json()).provisioningStatus,'Provisioning');

@@ -26,7 +26,7 @@ it('onboards tenant details then IdP, saves only after review, supports details/
   const user=userEvent.setup();render(<MemoryRouter initialEntries={['/tenants']}><App /></MemoryRouter>);
   expect(await screen.findByRole('heading',{name:'Tenants'})).toBeVisible();
   const nav=screen.getByRole('navigation',{name:'Portal navigation'});
-  expect(within(nav).getAllByRole('link').map(link=>link.textContent)).toEqual(['Clusters','Tenants','Models','Subscriptions']);
+  expect(within(nav).getAllByRole('link').map(link=>link.textContent)).toEqual(['AI Grid','Monitoring','Clusters','Tenants','Models','Subscriptions']);
   await user.click(await screen.findByRole('link',{name:'Create tenant'}));
   const name=await screen.findByRole('textbox',{name:'Name'});
   expect(screen.getByRole('button',{name:'Next'})).toBeDisabled();await user.type(name,'tenant1');

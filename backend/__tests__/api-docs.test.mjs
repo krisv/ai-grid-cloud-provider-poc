@@ -26,7 +26,7 @@ test('Swagger page and specification are served without accessing the repository
   const operations = Object.entries(spec.paths).flatMap(([path,item]) =>
     Object.keys(item).filter(method => ['get','post','put','delete','patch'].includes(method)).map(method => `${method.toUpperCase()} ${path}`));
   assert.deepEqual(operations.sort(),[
-    'GET /clusters','PATCH /clusters/{name}',
+    'GET /clusters','PATCH /clusters/{name}','GET /grid/overview',
     'GET /tenants','POST /tenants','GET /tenants/{name}','PUT /tenants/{name}','DELETE /tenants/{name}',
     'GET /health','GET /locations','GET /models','GET /subscriptions','POST /subscriptions',
     'GET /subscriptions/{name}','PUT /subscriptions/{name}','DELETE /subscriptions/{name}',

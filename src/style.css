@@ -18,3 +18,20 @@ html, body, #root { height: 100%; }
 /* Keep all five navigation steps visible even when the step content is short. */
 .portal-model-wizard .pf-v6-c-wizard__inner-wrap { min-height: 24rem; }
 .portal-tenant-wizard .pf-v6-c-wizard__inner-wrap { min-height: 24rem; }
+
+.grid-toolbar { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
+.grid-toolbar select { max-width:220px; }
+.grid-source { margin:16px 0; color:var(--pf-t--global--text--color--subtle); }
+.grid-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-bottom:24px; }
+.grid-stats strong { display:block; font-size:32px; margin-top:8px; }
+.grid-charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin:24px 0; }
+.grid-metric-value { font-size:28px; margin:12px 0; }
+.grid-chart,.grid-map { width:100%; height:auto; display:block; }
+.grid-map { margin:16px 0; max-height:480px; }
+.grid-map-site { cursor:pointer; }
+.grid-map-site:focus circle { stroke:#0066cc; stroke-width:5; }
+.grid-table-scroll { overflow:auto; }
+.grid-table { width:100%; border-collapse:collapse; margin-top:16px; text-align:left; }
+.grid-table th,.grid-table td { padding:14px; border-bottom:1px solid var(--pf-t--global--border--color--default); }
+@media(max-width:800px) { .grid-stats,.grid-charts { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:500px) { .grid-stats,.grid-charts { grid-template-columns:1fr; } }
